@@ -1,0 +1,73 @@
+/* gridStyle.css */
+
+/* Center align all cell text */
+.ag-theme-alpine-dark .ag-cell {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 1rem;
+  color: #ece5e5;
+
+}
+
+/* Fixed column width (override flex) */
+.ag-theme-alpine-dark .ag-cell,
+.ag-theme-alpine-dark .ag-header-cell {
+  min-width: 150px !important;
+  max-width: 250px !important;
+  width: 250px !important;
+}
+
+/* Prevent column resizing */
+.ag-theme-alpine-dark .ag-header-cell-resize {
+  display: none !important;
+}
+
+/* Header row styling */
+.ag-theme-alpine-dark .ag-header {
+  background: #0000003a;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #dae3de;
+}
+
+.ag-theme-alpine-dark .ag-header-cell-label {
+  justify-content: center;
+}
+
+/* Row hover effect */
+.ag-theme-alpine-dark .ag-row-hover {
+  background-color: #2f393f !important;
+}
+
+/* Zebra striping for rows */
+.ag-theme-alpine-dark .ag-row-even {
+  background-color: #061a2e;
+}
+.ag-theme-alpine-dark .ag-row-odd {
+  background-color: #092d67;
+}
+
+
+/* Remove grid border */
+
+
+/* Add borders between columns */
+.ag-theme-alpine-dark .ag-cell {
+  border-right:2px solid #d1d5db;
+}
+.ag-theme-alpine-dark .ag-row .ag-cell:last-child {
+  border-right: none;
+}
+.ag-theme-alpine-dark .ag-header-cell {
+  border-right: 2px solid #d4edde;
+}
+.ag-theme-alpine-dark .ag-header-row .ag-header-cell:last-child {
+  border-right: none;
+}
+
+/* Make grid height auto */
+.ag-theme-alpine {
+  height: 200px !important;
+ 
+}
