@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import landingPageLogo from "../imgs/landingPageLogo.jpg";
 
 function Navbar() {
   const location = useLocation();
@@ -16,7 +17,7 @@ function Navbar() {
         {/* Logo on the left */}
         <div className="flex-shrink-0 mr-8">
           <img
-            src="../imgs/landingPageLogo.jpg"
+            src={landingPageLogo}
             alt="Digital Diary Logo"
             className="h-12 w-auto object-contain"
           />

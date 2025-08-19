@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import landingPageLogo from "../imgs/landingPageLogo.png";
 
 function Signup() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ function Signup() {
       <div className="bg-zinc-600 w-full h-full rounded-2xl drop-shadow-2xl shadow-2xl shadow-zinc-700">
         <div>
           <img
-            src="../imgs/landingPageLogo.jpg"
+            src={landingPageLogo}
             alt="Digital Diary Logo"
             className="w-64 h-32 object-contain mx-10 my-4 drop-shadow-lg"
           />
