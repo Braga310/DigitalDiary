@@ -31,18 +31,16 @@ const DoctorLedger: React.FC = () => {
   // Fetch doctors
   useEffect(() => {
     axios
-      .get("http://localhost:8000/api/doctors")
+      .get("https://digitaldiary-c5on.onrender.com/api/doctors")
       .then((res) => setDoctors(res.data));
   }, []);
 
   // Add doctor
   const handleAddDoctor = () => {
+    if (!newDoctorName) return;
     axios
-      .post("http://localhost:8000/api/doctors", {
+      .post("https://digitaldiary-c5on.onrender.com/api/doctors", {
         name: newDoctorName,
-        lastConsultationDate: newDoctorLastConsultationDate,
-        productsDiscussed: newDoctorProductsDiscussed,
-        notes: newDoctorNotes,
       })
       .then(() => {
         setShowAddModal(false);
@@ -51,7 +49,7 @@ const DoctorLedger: React.FC = () => {
         setNewDoctorProductsDiscussed("");
         setNewDoctorNotes("");
         axios
-          .get("http://localhost:8000/api/doctors")
+          .get("https://digitaldiary-c5on.onrender.com/api/doctors")
           .then((res) => setDoctors(res.data));
       });
   };
@@ -79,26 +77,35 @@ const DoctorLedger: React.FC = () => {
         .slice(1)
         .map((row: any) => row[nameColIdx])
         .filter(Boolean);
-      axios
-        .post("http://localhost:8000/api/doctors/bulk", { names })
-        .then(() => {
-          axios
-            .get("http://localhost:8000/api/doctors")
-            .then((res) => setDoctors(res.data));
-        });
+      const handleBulkUpload = (names: string[]) => {
+        axios
+          .post("https://digitaldiary-c5on.onrender.com/api/doctors/bulk", {
+            names,
+          })
+          .then(() => {
+            setShowAddModal(false);
+            axios
+              .get("https://digitaldiary-c5on.onrender.com/api/doctors")
+              .then((res) => setDoctors(res.data));
+          });
+      };
     };
     reader.readAsArrayBuffer(file);
   };
 
   // Edit doctor
   const handleEditDoctor = () => {
+    if (!editDoctor) return;
     axios
-      .put(`http://localhost:8000/api/doctors/${editDoctor._id}`, editDoctor)
+      .put(
+        `https://digitaldiary-c5on.onrender.com/api/doctors/${editDoctor._id}`,
+        editDoctor
+      )
       .then(() => {
         setShowEditModal(false);
         setEditDoctor(null);
         axios
-          .get("http://localhost:8000/api/doctors")
+          .get("https://digitaldiary-c5on.onrender.com/api/doctors")
           .then((res) => setDoctors(res.data));
       });
   };

@@ -14,10 +14,13 @@ function Login() {
 
     try {
       console.log("Sending request to backend...");
-      const res = await axios.post("http://localhost:8000/api/auth/login", {
-        username,
-        password,
-      });
+      const res = await axios.post(
+        "https://digitaldiary-c5on.onrender.com/api/auth/login",
+        {
+          username,
+          password,
+        }
+      );
       console.log("Response received:", res.data);
 
       if (res.data.token) {

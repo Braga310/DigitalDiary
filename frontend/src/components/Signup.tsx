@@ -12,11 +12,14 @@ function Signup() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:8000/api/auth/signup", {
-        username,
-        password,
-        firmName,
-      });
+      const res = await axios.post(
+        "https://digitaldiary-c5on.onrender.com/api/auth/signup",
+        {
+          username,
+          password,
+          firmName,
+        }
+      );
       console.log("Signup success:", res.data);
       alert("Signup successful! Please login.");
       navigate("/login");

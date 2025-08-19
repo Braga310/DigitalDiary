@@ -36,7 +36,9 @@ function Expenses() {
     const month = dayjs(calendarDate).month();
     const year = dayjs(calendarDate).year();
     axios
-      .get(`http://localhost:8000/api/transactions?month=${month}&year=${year}`)
+      .get(
+        `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
+      )
       .then((res) => setTransactions(res.data));
   }, []);
 
@@ -62,7 +64,7 @@ function Expenses() {
       return;
     }
     axios
-      .post("http://localhost:8000/api/transactions", {
+      .post("https://digitaldiary-c5on.onrender.com/api/transactions", {
         date: selectedDate,
         type,
         amount,
@@ -77,7 +79,7 @@ function Expenses() {
         const year = dayjs(selectedDate).year();
         axios
           .get(
-            `http://localhost:8000/api/transactions?month=${month}&year=${year}`
+            `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
           )
           .then((res) => setTransactions(res.data));
       });
@@ -85,18 +87,20 @@ function Expenses() {
 
   // Delete transaction
   const handleDeleteTransaction = (id: string) => {
-    axios.delete(`http://localhost:8000/api/transactions/${id}`).then(() => {
-      // Refetch transactions for the current month
-      if (selectedDate) {
-        const month = dayjs(selectedDate).month();
-        const year = dayjs(selectedDate).year();
-        axios
-          .get(
-            `http://localhost:8000/api/transactions?month=${month}&year=${year}`
-          )
-          .then((res) => setTransactions(res.data));
-      }
-    });
+    axios
+      .delete(`https://digitaldiary-c5on.onrender.com/api/transactions/${id}`)
+      .then(() => {
+        // Refetch transactions for the current month
+        if (selectedDate) {
+          const month = dayjs(selectedDate).month();
+          const year = dayjs(selectedDate).year();
+          axios
+            .get(
+              `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
+            )
+            .then((res) => setTransactions(res.data));
+        }
+      });
   };
 
   // Start editing
@@ -112,7 +116,7 @@ function Expenses() {
   // Save edit
   const handleEditTransaction = (id: string) => {
     axios
-      .put(`http://localhost:8000/api/transactions/${id}`, {
+      .put(`https://digitaldiary-c5on.onrender.com/api/transactions/${id}`, {
         date: selectedDate,
         ...editForm,
       })
@@ -125,7 +129,7 @@ function Expenses() {
           const year = dayjs(selectedDate).year();
           axios
             .get(
-              `http://localhost:8000/api/transactions?month=${month}&year=${year}`
+              `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
             )
             .then((res) => setTransactions(res.data));
         }

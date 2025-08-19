@@ -44,10 +44,10 @@ const Planner: React.FC = () => {
     axios
       .get(
         search
-          ? `http://localhost:8000/api/planner?doctorName=${encodeURIComponent(
+          ? `https://digitaldiary-c5on.onrender.com/api/planner?doctorName=${encodeURIComponent(
               search
             )}`
-          : "http://localhost:8000/api/planner"
+          : "https://digitaldiary-c5on.onrender.com/api/planner"
       )
       .then((res) => setEntries(res.data));
   }, [search]);
@@ -56,7 +56,7 @@ const Planner: React.FC = () => {
   const handleAddEntry = () => {
     if (!selectedDate || !newDoctorName) return;
     axios
-      .post("http://localhost:8000/api/planner", {
+      .post("https://digitaldiary-c5on.onrender.com/api/planner", {
         date: selectedDate,
         doctorName: newDoctorName,
       })
@@ -65,7 +65,7 @@ const Planner: React.FC = () => {
         setNewDoctorName("");
         setSelectedDate(null);
         axios
-          .get("http://localhost:8000/api/planner")
+          .get("https://digitaldiary-c5on.onrender.com/api/planner")
           .then((res) => setEntries(res.data));
       });
   };
@@ -77,11 +77,13 @@ const Planner: React.FC = () => {
 
   // Delete appointment for selected day
   const handleDeleteAppointment = (id: string) => {
-    axios.delete(`http://localhost:8000/api/planner/${id}`).then(() => {
-      axios
-        .get("http://localhost:8000/api/planner")
-        .then((res) => setEntries(res.data));
-    });
+    axios
+      .delete(`https://digitaldiary-c5on.onrender.com/api/planner/${id}`)
+      .then(() => {
+        axios
+          .get("https://digitaldiary-c5on.onrender.com/api/planner")
+          .then((res) => setEntries(res.data));
+      });
   };
 
   // Prepare events for FullCalendar
