@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import landingPageLogo from "../imgs/landingPageLogo.png";
+import landingPageLogo from "../imgs/landingPageLogo.jpg";
 
 function Login() {
   const navigate = useNavigate();
