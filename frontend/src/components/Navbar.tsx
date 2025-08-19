@@ -16,7 +16,7 @@ function Navbar() {
         {/* Logo on the left */}
         <div className="flex-shrink-0 mr-8">
           <img
-            src="/src/imgs/landingPageLogo.png"
+            src="../imgs/landingPageLogo.png"
             alt="Digital Diary Logo"
             className="h-12 w-auto object-contain"
           />
