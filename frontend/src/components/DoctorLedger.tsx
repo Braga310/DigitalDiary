@@ -73,22 +73,6 @@ const DoctorLedger: React.FC = () => {
         alert("No doctor name column found!");
         return;
       }
-      const names = json
-        .slice(1)
-        .map((row: any) => row[nameColIdx])
-        .filter(Boolean);
-      const handleBulkUpload = (names: string[]) => {
-        axios
-          .post("https://digitaldiary-c5on.onrender.com/api/doctors/bulk", {
-            names,
-          })
-          .then(() => {
-            setShowAddModal(false);
-            axios
-              .get("https://digitaldiary-c5on.onrender.com/api/doctors")
-              .then((res) => setDoctors(res.data));
-          });
-      };
     };
     reader.readAsArrayBuffer(file);
   };
