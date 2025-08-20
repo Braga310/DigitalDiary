@@ -1,9 +1,11 @@
 // backend/models/PlannerEntry.js
 const mongoose = require('mongoose');
 
+
 const PlannerEntrySchema = new mongoose.Schema({
   date: { type: Date, required: true },
-  doctorName: { type: String, required: true }
+  doctorName: { type: String, required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 module.exports = mongoose.model('PlannerEntry', PlannerEntrySchema);
