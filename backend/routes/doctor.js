@@ -1,3 +1,7 @@
+
+const express = require('express');
+const router = express.Router();
+const Doctor = require('../models/Doctor');
 const authMiddleware = require('../middleware/auth');
 
 // Get all doctors
