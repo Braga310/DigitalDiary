@@ -19,6 +19,21 @@ const DoctorLedger: React.FC = () => {
   const [editDoctor, setEditDoctor] = useState<any>(null);
   const [search, setSearch] = useState("");
   const gridRef = useRef<any>(null);
+  // Navbar show/hide on scroll (like Planner)
+  const [showNavbar, setShowNavbar] = useState(true);
+  const lastScrollY = useRef(0);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY.current && window.scrollY > 60) {
+        setShowNavbar(false);
+      } else {
+        setShowNavbar(true);
+      }
+      lastScrollY.current = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   type Doctor = {
     _id: string;
@@ -30,18 +45,30 @@ const DoctorLedger: React.FC = () => {
 
   // Fetch doctors
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get("https://digitaldiary-c5on.onrender.com/api/doctors")
+      .get("https://digitaldiary-c5on.onrender.com/api/doctors", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => setDoctors(res.data));
   }, []);
 
   // Add doctor
+
   const handleAddDoctor = () => {
     if (!newDoctorName) return;
+    const token = localStorage.getItem("token");
     axios
-      .post("https://digitaldiary-c5on.onrender.com/api/doctors", {
-        name: newDoctorName,
-      })
+      .post(
+        "https://digitaldiary-c5on.onrender.com/api/doctors",
+        {
+          name: newDoctorName,
+          lastConsultationDate: newDoctorLastConsultationDate,
+          productsDiscussed: newDoctorProductsDiscussed,
+          notes: newDoctorNotes,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       .then(() => {
         setShowAddModal(false);
         setNewDoctorName("");
@@ -49,7 +76,9 @@ const DoctorLedger: React.FC = () => {
         setNewDoctorProductsDiscussed("");
         setNewDoctorNotes("");
         axios
-          .get("https://digitaldiary-c5on.onrender.com/api/doctors")
+          .get("https://digitaldiary-c5on.onrender.com/api/doctors", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
           .then((res) => setDoctors(res.data));
       });
   };
@@ -78,18 +107,23 @@ const DoctorLedger: React.FC = () => {
   };
 
   // Edit doctor
+
   const handleEditDoctor = () => {
     if (!editDoctor) return;
+    const token = localStorage.getItem("token");
     axios
       .put(
         `https://digitaldiary-c5on.onrender.com/api/doctors/${editDoctor._id}`,
-        editDoctor
+        editDoctor,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       .then(() => {
         setShowEditModal(false);
         setEditDoctor(null);
         axios
-          .get("https://digitaldiary-c5on.onrender.com/api/doctors")
+          .get("https://digitaldiary-c5on.onrender.com/api/doctors", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
           .then((res) => setDoctors(res.data));
       });
   };
@@ -145,18 +179,30 @@ const DoctorLedger: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-700">
-      <Navbar />
-      <div className="max-w-6xl mx-auto pt-24">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl text-white font-bold">Doctor Ledger</h2>
-          <div className="flex gap-4">
+      <div
+        className="w-full"
+        style={{
+          transition: "transform 0.3s",
+          transform: showNavbar ? "translateY(0)" : "translateY(-100%)",
+          position: "relative",
+          zIndex: 100,
+        }}
+      >
+        <Navbar />
+      </div>
+      <div className="mx-auto pt-24 px-2 md:max-w-6xl md:px-0">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+          <h2 className="text-2xl md:text-3xl text-white font-bold text-center md:text-left">
+            Doctor Ledger
+          </h2>
+          <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center">
             <button
-              className="bg-green-600 text-white px-4 py-2 rounded font-semibold"
+              className="bg-green-600 text-white px-4 py-2 rounded font-semibold w-full md:w-auto"
               onClick={() => setShowAddModal(true)}
             >
               Add Doctor
             </button>
-            <label className="bg-blue-600 text-white px-4 py-2 rounded font-semibold cursor-pointer">
+            <label className="bg-blue-600 text-white px-4 py-2 rounded font-semibold cursor-pointer w-full md:w-auto text-center">
               Upload Excel
               <input
                 type="file"
@@ -170,7 +216,7 @@ const DoctorLedger: React.FC = () => {
               placeholder="Search doctors..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="px-3 py-2 rounded bg-zinc-800 text-white border border-zinc-600"
+              className="px-3 py-2 rounded bg-zinc-800 text-white border border-zinc-600 w-full md:w-auto"
             />
           </div>
         </div>
@@ -191,7 +237,7 @@ const DoctorLedger: React.FC = () => {
       {/* Add Doctor Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
+          <div className="bg-white rounded-lg p-4 w-full max-w-xs md:max-w-md lg:max-w-lg">
             <h3 className="text-lg font-bold mb-2">Add Doctor</h3>
             <input
               type="text"
@@ -239,7 +285,7 @@ const DoctorLedger: React.FC = () => {
       {/* Edit Doctor Modal */}
       {showEditModal && editDoctor && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
+          <div className="bg-white rounded-lg p-4 w-full max-w-xs md:max-w-md lg:max-w-lg">
             <h3 className="text-lg font-bold mb-2">Edit Doctor</h3>
             <input
               type="text"

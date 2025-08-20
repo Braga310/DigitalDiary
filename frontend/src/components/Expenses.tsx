@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -30,14 +30,32 @@ function Expenses() {
     amount: 0,
     description: "",
   });
+  // Navbar show/hide on scroll (like Planner)
+  const [showNavbar, setShowNavbar] = useState(true);
+  const lastScrollY = useRef(0);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > lastScrollY.current && window.scrollY > 60) {
+        setShowNavbar(false);
+      } else {
+        setShowNavbar(true);
+      }
+      lastScrollY.current = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Fetch transactions for the visible month
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const month = dayjs(calendarDate).month();
     const year = dayjs(calendarDate).year();
     axios
       .get(
-        `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
+        `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => setTransactions(res.data));
   }, []);
@@ -54,6 +72,7 @@ function Expenses() {
     : [];
 
   // Add transaction
+
   const handleAddTransaction = (
     type: "received" | "given",
     amount: number,
@@ -63,13 +82,18 @@ function Expenses() {
       alert("Please select a date on the calendar before adding an expense.");
       return;
     }
+    const token = localStorage.getItem("token");
     axios
-      .post("https://digitaldiary-c5on.onrender.com/api/transactions", {
-        date: selectedDate,
-        type,
-        amount,
-        description,
-      })
+      .post(
+        "https://digitaldiary-c5on.onrender.com/api/transactions",
+        {
+          date: selectedDate,
+          type,
+          amount,
+          description,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       .then(() => {
         setSidebarOpen(false);
         setSearch("");
@@ -79,16 +103,21 @@ function Expenses() {
         const year = dayjs(selectedDate).year();
         axios
           .get(
-            `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
+            `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           )
           .then((res) => setTransactions(res.data));
       });
   };
 
   // Delete transaction
+
   const handleDeleteTransaction = (id: string) => {
+    const token = localStorage.getItem("token");
     axios
-      .delete(`https://digitaldiary-c5on.onrender.com/api/transactions/${id}`)
+      .delete(`https://digitaldiary-c5on.onrender.com/api/transactions/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => {
         // Refetch transactions for the current month
         if (selectedDate) {
@@ -96,7 +125,8 @@ function Expenses() {
           const year = dayjs(selectedDate).year();
           axios
             .get(
-              `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
+              `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`,
+              { headers: { Authorization: `Bearer ${token}` } }
             )
             .then((res) => setTransactions(res.data));
         }
@@ -114,12 +144,18 @@ function Expenses() {
   };
 
   // Save edit
+
   const handleEditTransaction = (id: string) => {
+    const token = localStorage.getItem("token");
     axios
-      .put(`https://digitaldiary-c5on.onrender.com/api/transactions/${id}`, {
-        date: selectedDate,
-        ...editForm,
-      })
+      .put(
+        `https://digitaldiary-c5on.onrender.com/api/transactions/${id}`,
+        {
+          date: selectedDate,
+          ...editForm,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       .then(() => {
         setEditId(null);
         setEditForm({ type: "received", amount: 0, description: "" });
@@ -129,7 +165,8 @@ function Expenses() {
           const year = dayjs(selectedDate).year();
           axios
             .get(
-              `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`
+              `https://digitaldiary-c5on.onrender.com/api/transactions?month=${month}&year=${year}`,
+              { headers: { Authorization: `Bearer ${token}` } }
             )
             .then((res) => setTransactions(res.data));
         }
@@ -149,14 +186,27 @@ function Expenses() {
   }));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-700 flex flex-col items-center">
-      <Navbar />
-      <h2 className="text-4xl font-bold text-white mb-8 mt-24 text-center drop-shadow-lg">
+    <div
+      className="min-h-screen w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-700 flex flex-col items-center"
+      style={{ height: "auto" }}
+    >
+      <div
+        className="w-full"
+        style={{
+          transition: "transform 0.3s",
+          transform: showNavbar ? "translateY(0)" : "translateY(-100%)",
+          position: "relative",
+          zIndex: 100,
+        }}
+      >
+        <Navbar />
+      </div>
+      <h2 className="text-2xl md:text-4xl font-bold text-white mb-8 mt-24 text-center drop-shadow-lg">
         Monthly Calendar Expense
       </h2>
-      <div className="w-full max-w-7xl mx-auto flex h-[80vh]">
+      <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row h-auto md:h-[80vh] px-2 md:px-0">
         {/* Calendar Section */}
-        <div className="w-2/3 bg-zinc-800 rounded-l-2xl shadow-2xl p-4">
+        <div className="w-full md:w-2/3 bg-zinc-800 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none shadow-2xl p-4 mb-4 md:mb-0">
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -201,8 +251,11 @@ function Expenses() {
           />
         </div>
         {/* Sidebar for details and add/edit/delete expense */}
-        <div className="w-1/3 bg-zinc-900 rounded-r-2xl shadow-2xl p-8 flex flex-col justify-start items-center border-l border-zinc-700">
-          <h3 className="text-2xl text-white mb-4 text-center">
+        <div
+          className="w-full md:w-1/3 bg-zinc-900 rounded-b-2xl md:rounded-r-2xl md:rounded-bl-none shadow-2xl p-4 md:p-8 flex flex-col justify-start items-center border-t md:border-l border-zinc-700"
+          style={{ minHeight: 0 }}
+        >
+          <h3 className="text-lg md:text-2xl text-white mb-4 text-center">
             {search
               ? `Search Results`
               : selectedDate
@@ -216,156 +269,164 @@ function Expenses() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full mb-4 p-2 rounded bg-zinc-800 text-white border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-green-400"
           />
-          <ul className="mb-6 w-full max-h-48 overflow-y-auto">
-            {filteredTransactions.length === 0 ? (
-              <li className="text-zinc-400 text-center">No expenses found.</li>
-            ) : (
-              filteredTransactions.map((tx) =>
-                editId === tx._id ? (
-                  <li
-                    key={tx._id}
-                    className={`flex flex-col mb-2 p-2 rounded ${
-                      tx.type === "received"
-                        ? "bg-green-900/40 text-green-300"
-                        : "bg-red-900/40 text-red-300"
-                    }`}
-                  >
-                    <form
-                      className="flex flex-col gap-2"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleEditTransaction(tx._id);
-                      }}
+          <div className="w-full flex flex-col gap-4">
+            <ul className="mb-2 w-full max-h-40 md:max-h-48 overflow-y-auto">
+              {filteredTransactions.length === 0 ? (
+                <li className="text-zinc-400 text-center">
+                  No expenses found.
+                </li>
+              ) : (
+                filteredTransactions.map((tx) =>
+                  editId === tx._id ? (
+                    <li
+                      key={tx._id}
+                      className={`flex flex-col mb-2 p-2 rounded ${
+                        tx.type === "received"
+                          ? "bg-green-900/40 text-green-300"
+                          : "bg-red-900/40 text-red-300"
+                      }`}
                     >
-                      <select
-                        value={editForm.type}
-                        onChange={(e) =>
-                          setEditForm((f) => ({
-                            ...f,
-                            type: e.target.value as "received" | "given",
-                          }))
-                        }
-                        className="p-1 rounded bg-zinc-900 text-white"
+                      <form
+                        className="flex flex-col gap-2"
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleEditTransaction(tx._id);
+                        }}
                       >
-                        <option value="received">Received (Green)</option>
-                        <option value="given">Given (Red)</option>
-                      </select>
-                      <input
-                        type="number"
-                        value={editForm.amount}
-                        onChange={(e) =>
-                          setEditForm((f) => ({
-                            ...f,
-                            amount: parseFloat(e.target.value),
-                          }))
-                        }
-                        className="p-1 rounded bg-zinc-900 text-white"
-                        required
-                      />
-                      <input
-                        type="text"
-                        value={editForm.description}
-                        onChange={(e) =>
-                          setEditForm((f) => ({
-                            ...f,
-                            description: e.target.value,
-                          }))
-                        }
-                        className="p-1 rounded bg-zinc-900 text-white"
-                      />
+                        <select
+                          value={editForm.type}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              type: e.target.value as "received" | "given",
+                            }))
+                          }
+                          className="p-1 rounded bg-zinc-900 text-white"
+                        >
+                          <option value="received">Received (Green)</option>
+                          <option value="given">Given (Red)</option>
+                        </select>
+                        <input
+                          type="number"
+                          value={editForm.amount}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              amount: parseFloat(e.target.value),
+                            }))
+                          }
+                          className="p-1 rounded bg-zinc-900 text-white"
+                          required
+                        />
+                        <input
+                          type="text"
+                          value={editForm.description}
+                          onChange={(e) =>
+                            setEditForm((f) => ({
+                              ...f,
+                              description: e.target.value,
+                            }))
+                          }
+                          className="p-1 rounded bg-zinc-900 text-white"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 font-semibold"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            className="bg-gray-400 text-black px-3 py-1 rounded"
+                            onClick={() => setEditId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </li>
+                  ) : (
+                    <li
+                      key={tx._id}
+                      className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-2 p-2 rounded ${
+                        tx.type === "received"
+                          ? "bg-green-900/40 text-green-300"
+                          : "bg-red-900/40 text-red-300"
+                      }`}
+                    >
+                      <span className="font-semibold mb-1 md:mb-0">
+                        {tx.type === "received" ? "Received" : "Given"}
+                      </span>
+                      <span className="font-bold mb-1 md:mb-0">
+                        ₹{tx.amount}
+                      </span>
+                      <span className="italic mb-2 md:mb-0">
+                        {tx.description}
+                      </span>
                       <div className="flex gap-2">
                         <button
-                          type="submit"
-                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 font-semibold"
+                          className="text-xs bg-blue-600 px-2 py-1 rounded text-white hover:bg-blue-700"
+                          onClick={() => startEdit(tx)}
                         >
-                          Save
+                          Edit
                         </button>
                         <button
-                          type="button"
-                          className="bg-gray-400 text-black px-3 py-1 rounded"
-                          onClick={() => setEditId(null)}
+                          className="text-xs bg-red-600 px-2 py-1 rounded text-white hover:bg-red-700"
+                          onClick={() => handleDeleteTransaction(tx._id)}
                         >
-                          Cancel
+                          Delete
                         </button>
                       </div>
-                    </form>
-                  </li>
-                ) : (
-                  <li
-                    key={tx._id}
-                    className={`flex justify-between items-center mb-2 p-2 rounded ${
-                      tx.type === "received"
-                        ? "bg-green-900/40 text-green-300"
-                        : "bg-red-900/40 text-red-300"
-                    }`}
-                  >
-                    <span className="font-semibold">
-                      {tx.type === "received" ? "Received" : "Given"}
-                    </span>
-                    <span className="font-bold">₹{tx.amount}</span>
-                    <span className="italic">{tx.description}</span>
-                    <div className="flex gap-2">
-                      <button
-                        className="text-xs bg-blue-600 px-2 py-1 rounded text-white hover:bg-blue-700"
-                        onClick={() => startEdit(tx)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="text-xs bg-red-600 px-2 py-1 rounded text-white hover:bg-red-700"
-                        onClick={() => handleDeleteTransaction(tx._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
+                    </li>
+                  )
                 )
-              )
-            )}
-          </ul>
-          {/* Add Expense Form */}
-          <form
-            className="w-full bg-zinc-800 rounded-lg p-4 shadow"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.target as HTMLFormElement;
-              const type = form.type.value as "received" | "given";
-              const amount = parseFloat(form.amount.value);
-              const description = form.description.value;
-              handleAddTransaction(type, amount, description);
-              form.reset();
-            }}
-          >
-            <h4 className="text-lg text-white mb-2 font-semibold">
-              Add Expense
-            </h4>
-            <select
-              name="type"
-              className="w-full mb-2 p-2 border rounded bg-zinc-900 text-white"
+              )}
+            </ul>
+            {/* Add Expense Form */}
+            <form
+              className="h-auto w-full bg-zinc-800 rounded-lg p-4 shadow"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const type = form.type.value as "received" | "given";
+                const amount = parseFloat(form.amount.value);
+                const description = form.description.value;
+                handleAddTransaction(type, amount, description);
+                form.reset();
+              }}
             >
-              <option value="received">Received (Green)</option>
-              <option value="given">Given (Red)</option>
-            </select>
-            <input
-              name="amount"
-              type="number"
-              placeholder="Amount"
-              className="w-full mb-2 p-2 border rounded bg-zinc-900 text-white"
-              required
-            />
-            <input
-              name="description"
-              type="text"
-              placeholder="Description"
-              className="w-full mb-2 p-2 border rounded bg-zinc-900 text-white"
-            />
-            <button
-              type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mt-2 font-semibold"
-            >
-              Add
-            </button>
-          </form>
+              <h4 className="text-lg text-white mb-2 font-semibold">
+                Add Expense
+              </h4>
+              <select
+                name="type"
+                className="w-full mb-2 p-2 border rounded bg-zinc-900 text-white"
+              >
+                <option value="received">Received (Green)</option>
+                <option value="given">Given (Red)</option>
+              </select>
+              <input
+                name="amount"
+                type="number"
+                placeholder="Amount"
+                className="w-full mb-2 p-2 border rounded bg-zinc-900 text-white"
+                required
+              />
+              <input
+                name="description"
+                type="text"
+                placeholder="Description"
+                className="w-full mb-2 p-2 border rounded bg-zinc-900 text-white"
+              />
+              <button
+                type="submit"
+                className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 mt-2 font-semibold"
+              >
+                Add
+              </button>
+            </form>
+          </div>
         </div>
       </div>
       {/* Custom FullCalendar styles */}

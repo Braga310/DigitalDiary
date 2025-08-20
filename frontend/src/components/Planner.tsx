@@ -40,32 +40,43 @@ const Planner: React.FC = () => {
   } | null>(null);
 
   // Fetch entries (optionally filtered by doctor name)
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
       .get(
         search
           ? `https://digitaldiary-c5on.onrender.com/api/planner?doctorName=${encodeURIComponent(
               search
             )}`
-          : "https://digitaldiary-c5on.onrender.com/api/planner"
+          : "https://digitaldiary-c5on.onrender.com/api/planner",
+        { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => setEntries(res.data));
   }, [search]);
 
   // Add entry
+
   const handleAddEntry = () => {
     if (!selectedDate || !newDoctorName) return;
+    const token = localStorage.getItem("token");
     axios
-      .post("https://digitaldiary-c5on.onrender.com/api/planner", {
-        date: selectedDate,
-        doctorName: newDoctorName,
-      })
+      .post(
+        "https://digitaldiary-c5on.onrender.com/api/planner",
+        {
+          date: selectedDate,
+          doctorName: newDoctorName,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       .then(() => {
         setShowModal(false);
         setNewDoctorName("");
         setSelectedDate(null);
         axios
-          .get("https://digitaldiary-c5on.onrender.com/api/planner")
+          .get("https://digitaldiary-c5on.onrender.com/api/planner", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
           .then((res) => setEntries(res.data));
       });
   };
@@ -76,12 +87,18 @@ const Planner: React.FC = () => {
     : [];
 
   // Delete appointment for selected day
+
   const handleDeleteAppointment = (id: string) => {
+    const token = localStorage.getItem("token");
     axios
-      .delete(`https://digitaldiary-c5on.onrender.com/api/planner/${id}`)
+      .delete(`https://digitaldiary-c5on.onrender.com/api/planner/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => {
         axios
-          .get("https://digitaldiary-c5on.onrender.com/api/planner")
+          .get("https://digitaldiary-c5on.onrender.com/api/planner", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
           .then((res) => setEntries(res.data));
       });
   };
@@ -138,11 +155,11 @@ const Planner: React.FC = () => {
       >
         <Navbar />
       </div>
-      <h2 className="text-4xl font-bold text-white mb-8 mt-24 text-center drop-shadow-lg">
+      <h2 className="text-2xl md:text-4xl font-bold text-white mb-8 mt-24 text-center drop-shadow-lg">
         Planner Calendar
       </h2>
       <div
-        className="w-full max-w-5xl mx-auto flex flex-col items-center"
+        className="w-full max-w-5xl mx-auto flex flex-col items-center px-2 md:px-0"
         style={{ minHeight: "80vh" }}
       >
         <input
@@ -152,41 +169,43 @@ const Planner: React.FC = () => {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full mb-4 p-2 rounded bg-zinc-800 text-white border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-green-400"
         />
-        <FullCalendar
-          plugins={[dayGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          events={events}
-          height="auto"
-          contentHeight="auto"
-          dayMaxEvents={3}
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,dayGridYear",
-          }}
-          selectable={true}
-          dateClick={handleDateClick}
-          eventDisplay="block"
-          eventContent={(arg) => (
-            <div
-              style={{
-                background: arg.event.backgroundColor,
-                color: "#fff",
-                borderRadius: "6px",
-                padding: "2px 4px",
-                fontSize: "0.95rem",
-                marginBottom: "2px",
-                fontWeight: 500,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={arg.event.title}
-            >
-              {arg.event.title}
-            </div>
-          )}
-        />
+        <div className="w-full">
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            events={events}
+            height="auto"
+            contentHeight="auto"
+            dayMaxEvents={3}
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,dayGridYear",
+            }}
+            selectable={true}
+            dateClick={handleDateClick}
+            eventDisplay="block"
+            eventContent={(arg) => (
+              <div
+                style={{
+                  background: arg.event.backgroundColor,
+                  color: "#fff",
+                  borderRadius: "6px",
+                  padding: "2px 4px",
+                  fontSize: "0.95rem",
+                  marginBottom: "2px",
+                  fontWeight: 500,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={arg.event.title}
+              >
+                {arg.event.title}
+              </div>
+            )}
+          />
+        </div>
       </div>
       {/* Add Doctor Popover Widget */}
       {showModal && popoverPosition && (
@@ -201,7 +220,8 @@ const Planner: React.FC = () => {
             borderRadius: "0.75rem",
             boxShadow: "0 2px 16px rgba(0,0,0,0.2)",
             padding: "1.5rem",
-            width: "320px",
+            width: "95vw",
+            maxWidth: "320px",
             maxHeight: "320px",
             overflowY: "auto",
           }}
