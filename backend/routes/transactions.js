@@ -1,15 +1,21 @@
+
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
+const authMiddleware = require('../middleware/auth');
+
 
 // Get transactions for a month
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const monthNum = parseInt(req.query.month);
     const yearNum = parseInt(req.query.year);
     const start = new Date(yearNum, monthNum, 1);
     const end = new Date(yearNum, monthNum + 1, 0, 23, 59, 59);
-    const transactions = await Transaction.find({ date: { $gte: start, $lte: end } }).sort({ date: -1 });
+    const transactions = await Transaction.find({
+      user: req.userId,
+      date: { $gte: start, $lte: end }
+    }).sort({ date: -1 });
     res.json(transactions);
   } catch (err) {
     console.error("Error fetching transactions:", err);
@@ -17,8 +23,9 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 // Add transaction
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     let { date, type, amount, description } = req.body;
     if (!date || !type || amount == null) {
@@ -26,7 +33,7 @@ router.post('/', async (req, res) => {
     }
     // Convert date string to Date object
     date = new Date(date);
-    const transaction = new Transaction({ date, type, amount, description });
+    const transaction = new Transaction({ date, type, amount, description, user: req.userId });
     await transaction.save();
     res.status(201).json(transaction);
   } catch (err) {
@@ -35,12 +42,13 @@ router.post('/', async (req, res) => {
   }
 });
 
+
 // Update transaction
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { date, type, amount, description } = req.body;
-    const transaction = await Transaction.findByIdAndUpdate(
-      req.params.id,
+    const transaction = await Transaction.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
       { date, type, amount, description },
       { new: true }
     );
@@ -54,10 +62,11 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+
 // Delete transaction
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const deleted = await Transaction.findByIdAndDelete(req.params.id);
+    const deleted = await Transaction.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!deleted) {
       return res.status(404).json({ error: "Transaction not found" });
     }

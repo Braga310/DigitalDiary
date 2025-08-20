@@ -1,12 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const Doctor = require('../models/Doctor');
+const authMiddleware = require('../middleware/auth');
 
 // Get all doctors
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const { search } = req.query;
-    const query = search ? { name: { $regex: search, $options: 'i' } } : {};
+    const query = {
+      user: req.userId,
+      ...(search ? { name: { $regex: search, $options: 'i' } } : {})
+    };
     const doctors = await Doctor.find(query).limit(10);
     res.json(doctors);
   } catch (error) {
@@ -16,13 +17,13 @@ router.get('/', async (req, res) => {
 });
 
 // Add a doctor
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { name, lastConsultationDate, productsDiscussed, notes } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Doctor name is required' });
     }
-    const doctor = new Doctor({ name, lastConsultationDate, productsDiscussed, notes });
+    const doctor = new Doctor({ name, lastConsultationDate, productsDiscussed, notes, user: req.userId });
     await doctor.save();
     res.status(201).json(doctor);
   } catch (error) {
@@ -31,16 +32,14 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ...existing code...
-
 // Bulk add doctors from Excel
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', authMiddleware, async (req, res) => {
   try {
     const { names } = req.body; // array of names
     if (!Array.isArray(names) || names.length === 0) {
       return res.status(400).json({ error: 'No doctor names provided' });
     }
-  const docs = names.map(name => ({ name, lastConsultationDate: null, productsDiscussed: '', notes: '' }));
+    const docs = names.map(name => ({ name, lastConsultationDate: null, productsDiscussed: '', notes: '', user: req.userId }));
     await Doctor.insertMany(docs);
     res.status(201).json({ success: true });
   } catch (err) {
@@ -49,14 +48,12 @@ router.post('/bulk', async (req, res) => {
   }
 });
 
-// ...existing code...
-
 // Update a doctor
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { name, lastConsultationDate, productsDiscussed, notes } = req.body;
-    const doctor = await Doctor.findByIdAndUpdate(
-      req.params.id,
+    const doctor = await Doctor.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
       { name, lastConsultationDate, productsDiscussed, notes },
       { new: true }
     );
@@ -68,9 +65,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a doctor
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const doctor = await Doctor.findByIdAndDelete(req.params.id);
+    const doctor = await Doctor.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!doctor) {
       return res.status(404).json({ error: 'Doctor not found' });
     }
@@ -82,13 +79,14 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Add consultation to a doctor
-router.post('/:id/consultations', async (req, res) => {
+router.post('/:id/consultations', authMiddleware, async (req, res) => {
   try {
     const { date, productsDiscussed, notes } = req.body;
-    const doctor = await Doctor.findById(req.params.id);
+    const doctor = await Doctor.findOne({ _id: req.params.id, user: req.userId });
     if (!doctor) {
       return res.status(404).json({ error: 'Doctor not found' });
     }
+    if (!doctor.consultations) doctor.consultations = [];
     doctor.consultations.push({ date, productsDiscussed, notes });
     await doctor.save();
     res.json(doctor);
